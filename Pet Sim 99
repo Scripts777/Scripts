@@ -1,4 +1,4 @@
--- Diagnostic Script for Grow a Garden Pet Visibility
+-- Diagnostic Script for Grow a Garden Pet Visibility (Tools with 'Age' in Name)
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 
@@ -54,7 +54,7 @@ local function logToolDetails(tool, context)
     end
 end
 
--- Function to clone and test a pet
+-- Function to clone and test a pet with 'Age' in its name
 local function testPetClone(player)
     local backpack = player:FindFirstChild("Backpack")
     if not backpack then
@@ -63,17 +63,23 @@ local function testPetClone(player)
     end
 
     local tools = backpack:GetChildren()
-    if #tools == 0 then
-        print("No tools found in " .. player.Name .. "'s Backpack")
+    local targetTool = nil
+    for _, tool in pairs(tools) do
+        if tool:IsA("Tool") and string.find(string.lower(tool.Name), "age") then
+            targetTool = tool
+            break
+        end
+    end
+
+    if not targetTool then
+        print("No tool with 'Age' in name found in " .. player.Name .. "'s Backpack")
         return
     end
 
-    -- Clone the first tool for testing
-    local tool = tools[1]
-    print("Testing clone of: " .. tool.Name .. " from " .. player.Name)
-    logToolDetails(tool, "Original")
+    print("Testing clone of: " .. targetTool.Name .. " from " .. player.Name)
+    logToolDetails(targetTool, "Original")
 
-    local clonedTool = tool:Clone()
+    local clonedTool = targetTool:Clone()
     logToolDetails(clonedTool, "Cloned")
 
     -- Make visible and position
