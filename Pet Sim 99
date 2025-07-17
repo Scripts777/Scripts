@@ -1,8 +1,154 @@
--- Diagnostic Script for Grow a Garden Pet Visibility (Tools with 'Age' in Name)
+-- KrogHub Script for Grow a Garden with Enhanced Pet Visibility Debugging
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
+local TweenService = game:GetService("TweenService")
 
--- Function to log detailed information about a tool
+-- Create GUI
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "KrogHub"
+ScreenGui.ResetOnSpawn = false
+ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
+
+-- Toggle Button (Circular)
+local ToggleButton = Instance.new("Frame")
+ToggleButton.Size = UDim2.new(0, 50, 0, 50)
+ToggleButton.Position = UDim2.new(0.05, 0, 0.05, 0)
+ToggleButton.BackgroundColor3 = Color3.fromRGB(50, 150, 50)
+ToggleButton.BorderSizePixel = 0
+ToggleButton.Active = true
+ToggleButton.Draggable = true
+ToggleButton.Parent = ScreenGui
+ToggleButton.ClipsDescendants = true
+
+local UICorner = Instance.new("UICorner")
+UICorner.CornerRadius = UDim.new(0.5, 0)
+UICorner.Parent = ToggleButton
+
+local ToggleLabel = Instance.new("TextLabel")
+ToggleLabel.Size = UDim2.new(1, 0, 1, 0)
+ToggleLabel.BackgroundTransparency = 1
+ToggleLabel.Text = "K"
+ToggleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+ToggleLabel.TextSize = 20
+ToggleLabel.Font = Enum.Font.SourceSansBold
+ToggleLabel.TextScaled = true
+ToggleLabel.Parent = ToggleButton
+
+-- Main Frame
+local MainFrame = Instance.new("Frame")
+MainFrame.Size = UDim2.new(0, 400, 0, 300)
+MainFrame.Position = UDim2.new(0.5, -200, 0.5, -150)
+MainFrame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+MainFrame.BorderSizePixel = 0
+MainFrame.Active = true
+MainFrame.Draggable = true
+MainFrame.Visible = false
+MainFrame.Parent = ScreenGui
+
+-- Title Bar
+local TitleBar = Instance.new("Frame")
+TitleBar.Size = UDim2.new(1, 0, 0, 30)
+TitleBar.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+TitleBar.BorderSizePixel = 0
+TitleBar.Parent = MainFrame
+
+local TitleLabel = Instance.new("TextLabel")
+TitleLabel.Size = UDim2.new(1, -40, 1, 0)
+TitleLabel.Position = UDim2.new(0, 10, 0, 0)
+TitleLabel.BackgroundTransparency = 1
+TitleLabel.Text = "KrogHub"
+TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+TitleLabel.TextSize = 18
+TitleLabel.Font = Enum.Font.SourceSansBold
+TitleLabel.Parent = TitleBar
+
+-- Close Button
+local CloseButton = Instance.new("TextButton")
+CloseButton.Size = UDim2.new(0, 30, 0, 30)
+CloseButton.Position = UDim2.new(1, -30, 0, 0)
+CloseButton.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+CloseButton.Text = "X"
+CloseButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+CloseButton.TextSize = 16
+CloseButton.Font = Enum.Font.SourceSansBold
+CloseButton.Parent = TitleBar
+
+-- Minimize/Open Button
+local MinimizeButton = Instance.new("TextButton")
+MinimizeButton.Size = UDim2.new(0, 30, 0, 30)
+MinimizeButton.Position = UDim2.new(1, -60, 0, 0)
+MinimizeButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+MinimizeButton.Text = "-"
+MinimizeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+MinimizeButton.TextSize = 16
+MinimizeButton.Font = Enum.Font.SourceSansBold
+MinimizeButton.Parent = TitleBar
+
+-- Player List Frame
+local PlayerListFrame = Instance.new("Frame")
+PlayerListFrame.Size = UDim2.new(0, 150, 1, -60)
+PlayerListFrame.Position = UDim2.new(0, 0, 0, 60)
+PlayerListFrame.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+PlayerListFrame.BorderSizePixel = 0
+PlayerListFrame.Parent = MainFrame
+
+-- Refresh Button
+local RefreshButton = Instance.new("TextButton")
+RefreshButton.Size = UDim2.new(1, 0, 0, 30)
+RefreshButton.Position = UDim2.new(0, 0, 0, 30)
+RefreshButton.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+RefreshButton.Text = "Refresh Players"
+RefreshButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+RefreshButton.TextSize = 14
+RefreshButton.Font = Enum.Font.SourceSans
+RefreshButton.Parent = MainFrame
+
+-- Player Scroll
+local PlayerScroll = Instance.new("ScrollingFrame")
+PlayerScroll.Size = UDim2.new(1, 0, 1, -30)
+PlayerScroll.Position = UDim2.new(0, 0, 0, 30)
+PlayerScroll.BackgroundTransparency = 1
+PlayerScroll.ScrollBarThickness = 5
+PlayerScroll.Parent = PlayerListFrame
+
+local UIListLayout = Instance.new("UIListLayout")
+UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+UIListLayout.Parent = PlayerScroll
+
+-- Item Viewer Frame
+local ItemFrame = Instance.new("Frame")
+ItemFrame.Size = UDim2.new(0, 250, 1, -60)
+ItemFrame.Position = UDim2.new(0, 150, 0, 60)
+ItemFrame.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+ItemFrame.BorderSizePixel = 0
+ItemFrame.Visible = false
+ItemFrame.Parent = MainFrame
+
+local ItemScroll = Instance.new("ScrollingFrame")
+ItemScroll.Size = UDim2.new(1, 0, 1, -30)
+ItemScroll.Position = UDim2.new(0, 0, 0, 30)
+ItemScroll.BackgroundTransparency = 1
+ItemScroll.ScrollBarThickness = 5
+ItemScroll.Parent = ItemFrame
+
+local ItemListLayout = Instance.new("UIListLayout")
+ItemListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+ItemListLayout.Parent = ItemScroll
+
+local ItemTitle = Instance.new("TextLabel")
+ItemTitle.Size = UDim2.new(1, 0, 0, 30)
+ItemTitle.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+ItemTitle.Text = "Items"
+ItemTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
+ItemTitle.TextSize = 16
+ItemTitle.Font = Enum.Font.SourceSansBold
+ItemTitle.Parent = ItemFrame
+
+-- Variables
+local isMinimized = false
+local selectedPlayer = nil
+
+-- Function to log detailed tool information
 local function logToolDetails(tool, context)
     print("=== Debugging Tool: " .. tool.Name .. " (" .. context .. ") ===")
     
@@ -44,6 +190,11 @@ local function logToolDetails(tool, context)
     print("Scripts Found: " .. #scripts)
     for i, script in ipairs(scripts) do
         print("  Script " .. i .. ": " .. script.Name .. " (" .. script.ClassName .. ")")
+        -- Disable LocalScripts to prevent interference
+        if script:IsA("LocalScript") then
+            script.Disabled = true
+            print("  Disabled LocalScript: " .. script.Name)
+        end
     end
 
     -- Check for PrimaryPart in Models
@@ -54,86 +205,133 @@ local function logToolDetails(tool, context)
     end
 end
 
--- Function to clone and test a pet with 'Age' in its name
-local function testPetClone(player)
-    local backpack = player:FindFirstChild("Backpack")
-    if not backpack then
-        print("No Backpack found for player: " .. player.Name)
-        return
-    end
-
-    local tools = backpack:GetChildren()
-    local targetTool = nil
-    for _, tool in pairs(tools) do
-        if tool:IsA("Tool") and string.find(string.lower(tool.Name), "age") then
-            targetTool = tool
-            break
-        end
-    end
-
-    if not targetTool then
-        print("No tool with 'Age' in name found in " .. player.Name .. "'s Backpack")
-        return
-    end
-
-    print("Testing clone of: " .. targetTool.Name .. " from " .. player.Name)
-    logToolDetails(targetTool, "Original")
-
-    local clonedTool = targetTool:Clone()
-    logToolDetails(clonedTool, "Cloned")
-
-    -- Make visible and position
-    for _, part in pairs(clonedTool:GetDescendants()) do
-        if part:IsA("BasePart") then
-            part.Transparency = 0
-            part.CanCollide = false
-            part.Anchored = false
-        elseif part:IsA("Model") and part.PrimaryPart then
-            part:SetPrimaryPartCFrame(LocalPlayer.Character and LocalPlayer.Character.HumanoidRootPart and 
-                LocalPlayer.Character.HumanoidRootPart.CFrame * CFrame.new(0, 0, -3) or CFrame.new(0, 0, 0))
-        end
-    end
-
-    -- Handle equip/unequip events
-    clonedTool.Equipped:Connect(function()
-        print("Tool Equipped: " .. clonedTool.Name)
-        if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
-            local rootPart = LocalPlayer.Character.HumanoidRootPart
-            for _, part in pairs(clonedTool:GetDescendants()) do
-                if part:IsA("BasePart") then
-                    part.Transparency = 0
-                    part.CFrame = rootPart.CFrame * CFrame.new(0, 0, -3)
-                elseif part:IsA("Model") and part.PrimaryPart then
-                    part:SetPrimaryPartCFrame(rootPart.CFrame * CFrame.new(0, 0, -3))
-                end
+-- Function to make pet models visible and position correctly
+local function makePetVisible(tool)
+    if tool:IsA("Tool") then
+        logToolDetails(tool, "Cloned")
+        -- Ensure all parts are visible
+        for _, part in pairs(tool:GetDescendants()) do
+            if part:IsA("BasePart") then
+                part.Transparency = 0
+                part.CanCollide = false
+                part.Anchored = false
+            elseif part:IsA("Model") and part.PrimaryPart then
+                part:SetPrimaryPartCFrame(LocalPlayer.Character and LocalPlayer.Character.HumanoidRootPart and 
+                    LocalPlayer.Character.HumanoidRootPart.CFrame * CFrame.new(0, 0, -3) or CFrame.new(0, 0, 0))
             end
         end
-        logToolDetails(clonedTool, "Equipped")
-    end)
-
-    clonedTool.Unequipped:Connect(function()
-        print("Tool Unequipped: " .. clonedTool.Name)
-        logToolDetails(clonedTool, "Unequipped")
-    end)
-
-    clonedTool.Parent = LocalPlayer.Backpack
-    print("Cloned tool added to local player's Backpack")
-end
-
--- Test with another player's tool
-local function startDebug()
-    for _, player in pairs(Players:GetPlayers()) do
-        if player ~= LocalPlayer and player:FindFirstChild("Backpack") then
-            testPetClone(player)
-            break -- Test with one player for simplicity
-        end
+        -- Handle equip event for positioning
+        tool.Equipped:Connect(function()
+            print("Tool Equipped: " .. tool.Name)
+            if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                local rootPart = LocalPlayer.Character.HumanoidRootPart
+                for _, part in pairs(tool:GetDescendants()) do
+                    if part:IsA("BasePart") then
+                        part.Transparency = 0
+                        part.CFrame = rootPart.CFrame * CFrame.new(0, 0, -3)
+                    elseif part:IsA("Model") and part.PrimaryPart then
+                        part:SetPrimaryPartCFrame(rootPart.CFrame * CFrame.new(0, 0, -3))
+                    end
+                end
+            end
+            logToolDetails(tool, "Equipped")
+        end)
+        -- Handle unequip event
+        tool.Unequipped:Connect(function()
+            print("Tool Unequipped: " .. tool.Name)
+            for _, part in pairs(tool:GetDescendants()) do
+                if part:IsA("BasePart") then
+                    part.Transparency = 0
+                end
+            end
+            logToolDetails(tool, "Unequipped")
+        end)
     end
 end
 
--- Run the debug
-startDebug()
+-- Function to update player list
+local function updatePlayerList()
+    for _, v in pairs(PlayerScroll:GetChildren()) do
+        if v:IsA("TextButton") then
+            v:Destroy()
+        end
+    end
+    for _, player in pairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer then
+            local PlayerButton = Instance.new("TextButton")
+            PlayerButton.Size = UDim2.new(1, -10, 0, 30)
+            PlayerButton.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
+            PlayerButton.Text = player.Name
+            PlayerButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+            PlayerButton.TextSize = 14
+            PlayerButton.Font = Enum.Font.SourceSans
+            PlayerButton.Parent = PlayerScroll
+            PlayerButton.MouseButton1Click:Connect(function()
+                selectedPlayer = player
+                ItemTitle.Text = player.Name .. "'s Items"
+                ItemFrame.Visible = true
+                for _, v in pairs(ItemScroll:GetChildren()) do
+                    if v:IsA("TextButton") then
+                        v:Destroy()
+                    end
+                end
+                local backpack = player:FindFirstChild("Backpack")
+                if backpack then
+                    for _, item in pairs(backpack:GetChildren()) do
+                        if item:IsA("Tool") and string.find(string.lower(item.Name), "age") then
+                            local ItemButton = Instance.new("TextButton")
+                            ItemButton.Size = UDim2.new(1, -10, 0, 30)
+                            ItemButton.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+                            ItemButton.Text = item.Name
+                            ItemButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+                            ItemButton.TextSize = 14
+                            ItemButton.Font = Enum.Font.SourceSans
+                            ItemButton.Parent = ItemScroll
+                            ItemButton.MouseButton1Click:Connect(function()
+                                local clonedItem = item:Clone()
+                                makePetVisible(clonedItem)
+                                clonedItem.Parent = LocalPlayer.Backpack
+                            end)
+                        end
+                    end
+                end
+                ItemScroll.CanvasSize = UDim2.new(0, 0, 0, ItemListLayout.AbsoluteContentSize.Y)
+            end)
+        end
+    end
+    PlayerScroll.CanvasSize = UDim2.new(0, 0, 0, UIListLayout.AbsoluteContentSize.Y)
+end
 
--- Monitor Backpack changes for further debugging
+-- Event Handlers
+ToggleButton.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        MainFrame.Visible = not MainFrame.Visible
+    end
+end)
+
+CloseButton.MouseButton1Click:Connect(function()
+    MainFrame.Visible = false
+end)
+
+MinimizeButton.MouseButton1Click:Connect(function()
+    isMinimized = not isMinimized
+    MainFrame.Size = isMinimized and UDim2.new(0, 400, 0, 30) or UDim2.new(0, 400, 0, 300)
+    MinimizeButton.Text = isMinimized and "+" or "-"
+    PlayerListFrame.Visible = not isMinimized
+    RefreshButton.Visible = not isMinimized
+    ItemFrame.Visible = false
+end)
+
+RefreshButton.MouseButton1Click:Connect(updatePlayerList)
+
+-- Initial Setup
+updatePlayerList()
+
+-- Update on player added/removed
+Players.PlayerAdded:Connect(updatePlayerList)
+Players.PlayerRemoving:Connect(updatePlayerList)
+
+-- Monitor Backpack for debugging
 LocalPlayer.Backpack.ChildAdded:Connect(function(child)
     if child:IsA("Tool") then
         print("New tool added to local Backpack: " .. child.Name)
